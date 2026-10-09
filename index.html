@@ -1,1 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правильная треугольная пирамида</title>
+    <!-- Подключаем библиотеку Three.js и контроллер орбиты для вращения мышью -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --bg-color: #f7fafc;
+            --text-color: #2d3748;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+        }
+
+        .content-section {
+            flex: 1;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .visual-section {
+            flex: 1;
+            position: relative;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            min-height: 500px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-top: 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--primary-color);
+            margin-top: 25px;
+        }
+
+        .task-box {
+            background-color: #ebf8ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .hint {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .legend {
+            padding: 15px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Левая панель: Условие и решение -->
+    <div class="content-section">
+        <h1>Правильная треугольная пирамида</h1>
+        <div class="task-box">
+            В правильной треугольной пирамиде SABC сторона основания AB равна 6, а боковое ребро SA равно 7. На рёбрах AB и SC отмечены точки K и M соответственно, причём AK:KB = SM:MC = 1:5. Плоскость &alpha; содержит прямую KM и параллельна прямой BC.
+        </div>
+        
+        <h3>Пункт а) Доказательство</h3>
+        <p>Поскольку плоскость &alpha; содержит точку K и параллельна BC, линия их пересечения с основанием (прямая KN) параллельна BC. По теореме Фалеса точка N делит AC в отношении 1:5.</p>
+        <p>В грани SAC имеем SM:MC = AN:NC = 1:5. Из подобия треугольников CMN и CSA следует, что прямая <strong>MN параллельна SA</strong>. Так как прямая MN лежит в плоскости &alpha;, то и вся плоскость &alpha; параллельна ребру SA.</p>
+
+        <h3>Пункт б) Нахождение угла</h3>
+        <p>Искомый угол между плоскостью &alpha; и гранью SBC равен углу между прямыми SA и SL (где L — середина BC). Расчет по теме косинусов для треугольника ASL дает:</p>
+        <p><strong>Ответ:</strong> arccos(31&radic;10 / 140)</p>
+    </div>
+
+    <!-- Правая панель: Интерактивное 3D -->
+    <div class="visual-section">
+        <div class="hint">🖱️ Зажмите левую кнопку мыши для вращения фигуры</div>
+        <div id="canvas-container"></div>
+        <div class="legend">
+            <div class="legend-item"><div class="color-box" style="background: #e53e3e;"></div>Ребра пирамиды</div>
+            <div class="legend-item"><div class="color-box" style="background: rgba(66, 153, 225, 0.4); border: 1px solid #3182ce;"></div>Плоскость &alpha; (KTMN)</div>
+            <div class="legend-item"><div class="color-box" style="background: #38a169;"></div>Прямая BC</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Инициализация 3D сцены
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xfcfcfc);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(12, 8, 12);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    // Освещение
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
+
+    // Координаты вершин правильной пирамиды SABC
+    // Основание - равносторонний треугольник со стороной 6. Высота пирамиды рассчитана геометрически.
+    const edgeBase = 6;
+    const hBase = edgeBase * Math.sqrt(3) / 2; // Высота основания = 3 * sqrt(3)
+    const rCircum = edgeBase / Math.sqrt(3);   // Радиус описанной окружности = 2 * sqrt(3)
+    const rIn = hBase - rCircum;
+
+    const A = new THREE.Vector3(-edgeBase/2, 0, -rIn);
+    const B = new THREE.Vector3(edgeBase/2, 0, -rIn);
+    const C = new THREE.Vector3(0, 0, rCircum);
+    
+    // Высота пирамиды H = sqrt(SA^2 - rCircum^2) = sqrt(49 - 12) = sqrt(37)
+    const H = Math.sqrt(49 - 12);
+    const S = new THREE.Vector3(0, H, 0);
+
+    // Сетка/Помощник основания для визуального баланса
+    const gridHelper = new THREE.GridHelper(15, 15, 0xe2e8f0, 0xf1f5f9);
+    gridHelper.position.y = -0.01;
+    scene.add(gridHelper);
+
+    // Функция создания цветных линий
+    function createLine(p1, p2, color, thickness = 2) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+        const material = new THREE.LineBasicMaterial({ color: color, linewidth: thickness });
+        return new THREE.Line(geometry, material);
+    }
+
+    // Рисуем каркас пирамиды (Красный цвет)
+    const pColor = 0xe53e3e;
+    scene.add(createLine(A, B, 0x38a169, 4)); // Ребро BC выделим зеленым, так как оно фигурирует в условии
+    scene.add(createLine(B, C, pColor, 2));
+    scene.add(createLine(C, A, pColor, 2));
+    scene.add(createLine(S, A, pColor, 2));
+    scene.add(createLine(S, B, pColor, 2));
+    scene.add(createLine(S, C, pColor, 2));
+
+    // Расчет точек K, N, M, T согласно пропорции 1:5
+    // AK:KB = 1:5 => K = A + (B-A)/6
+    const K = new THREE.Vector3().lerpVectors(A, B, 1/6);
+    // AN:NC = 1:5 => N = A + (C-A)/6
+    const N = new THREE.Vector3().lerpVectors(A, C, 1/6);
+    // SM:MC = 1:5 => M = S + (C-S)/1(1+5) = S + (C-S)/6
+    const M = new THREE.Vector3().lerpVectors(S, C, 1/6);
+    // ST:TB = 1:5 => T = S + (B-S)/6
+    const T = new THREE.Vector3().lerpVectors(S, B, 1/6);
+
+    // Создаем плоскость сечения &alpha; (Четырёхугольник KTMN)
+    const shape = new THREE.Shape();
+    shape.moveTo(K.x, K.z); // Проекция на плоскость для построения геометрии
+    
+    const planeGeom = new THREE.BufferGeometry().setFromPoints([K, T, M, N]);
+    // Индексы для построения двух треугольников из 4-х вершин сечения
+    planeGeom.setIndex([0, 1, 2, 0, 2, 3]);
+    planeGeom.computeVertexNormals();
+
+    const planeMat = new THREE.MeshBasicMaterial({
+        color: 0x4299e1,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.4
+    });
+    const planeMesh = new THREE.Mesh(planeGeom, planeMat);
+    scene.add(planeMesh);
+
+    // Контур сечения (Синие жирные линии)
+    scene.add(createLine(K, T, 0x3182ce, 3));
+    scene.add(createLine(T, M, 0x3182ce, 3));
+    scene.add(createLine(M, N, 0x3182ce, 3));
+    scene.add(createLine(N, K, 0x3182ce, 3));
+
+    // Точка фокуса камеры в центр пирамиды
+    controls.target.set(0, H/3, 0);
+
+    // Анимация
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // Поддержка адаптивности при изменении экрана
+    window.addEventListener('resize', onWindowResize, false);
+    function onWindowResize() {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+</script>
+</body>
+</html>
 
